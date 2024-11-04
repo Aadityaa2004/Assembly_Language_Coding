@@ -1,0 +1,45 @@
+ECE 331: Tutorial 0
+
+This folder contains an assembly file  (fact.s) that can be used to test and debug the installed Arm64 toolchain.
+
+To create an executable we can debug, run the following 2 terminal commands:
+
+aarch64-linux-gnu-as fact.s -g -o fact.o
+aarch64-linux-gnu-ld fact.o -o fact
+
+The first command uses the GNU Arm64 assembler to create a machine code object file that contains the machine code of our program. The 'g' and 'o' flags (respectively) tell the assembler that we should include debug info for gdb and that we have specifed an output file named 'fact.o'. The next command uses the GNU Arm64 linker to create an executable that can be run (same rationale for 'o' option).
+
+If these two commands ran successfully, you will have an executable called 'fact' in this folder that is ready to be debug. The instructions that follow depend on if you are debugging on an x86 machine (Windows or old Mac) or Arm64 machine (Newer Apple Silicon Mac). Note that we specifically used the Arm64 assembler and linker, so these steps are the same no matter the platform.
+
+On x86:
+
+You need to open two terminals to run two separate commands. In the first terminal, run this command:
+
+qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 ./fact
+
+'qemu-aarch64' is an emulation environment for Arm64 and lets us run the Arm64 executable on an x86 machine. The 'L' option points to a folder which contains architecture-specific info, such as the register file. The 'g' option here again refers to GDB, but in this case is opening a port (1234) so a remote gdb session can attach to the emulation environment.
+
+Open a new terminal window and run this command:
+
+gdb-multiarch -ex 'target remote localhost:1234'
+
+This command runs the multi-architecture variant of GDB and connects to the session we opened in the other terminal. You will be brought to a prompt, which is normal behavior.
+
+On Arm64 (i.e. Apple Silicon) this is much easier:
+
+run this command:
+
+gdb fact
+
+How to use this example:
+
+This example, which we covered in class, computes the factorial of a number recursively. There are a few small differences here worth noting. First, there are labels (text, _start) that tell the linker and assembler this code should go in the text region of memory and that it should start execution at the _start label. The next difference is that there is a 'nop' instruction (no operation) at line 8, which is useful for a breakpoint so that we can see the output of the program before it finishes.
+
+I have added a useful .gdbinit file to the home folder that will create a dashboard view of code execution and register state inside gdb. If you don't like this, you can delete that file.
+
+Useful gdb commands:
+
+-'run' runs the program. probably useful to set a breakpoint first, or it will run to the end
+-'b n' sets a breakpoint at line n of fact.s
+-'c' continues execution after hitting a breakpoint
+-'x/10x $sp' will show you the first 10 things on the stack in memory. $sp is referring to the stackpointer register.
